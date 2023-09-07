@@ -1,32 +1,42 @@
-const Footer = () => {
+import { useState } from 'react'
+
+const Display = (props) => {
   return (
-    <div>
-      greeting app created by
-      &nbsp;<a href="https://github.com/c0ritu00">Tuomas</a>
-    </div>
+    <div>{props.counter}</div>
   )
 }
 
-const Hello = (props) => {
-  console.log(props)
+const Button = (props) => {
   return (
-    <div>
-      <p>Hello {props.name}, you are {props.age} years old</p>
-    </div>
+    <button onClick={props.handleClick}>
+      {props.text}
+    </button>
   )
 }
 
 const App = () => {
-  const name = 'Pekka'
-  const age = 10
+  const [ counter, setCounter ] = useState(0)
+
+  const increaseByOne = () => setCounter(counter + 1)
+  const decreaseByOne = () => setCounter(counter - 1)
+  const setToZero = () => setCounter(0)
 
   return (
-    <>
-      <h1>Greetings</h1>
-      <Hello name="Maya" age={26 + 10} />
-      <Hello name={name} age={age} />
-      <Footer/>
-    </>
+    <div>
+      <Display counter={counter}/>
+      <Button
+        handleClick={increaseByOne}
+        text='plus'
+      />
+      <Button
+        handleClick={setToZero}
+        text='zero'
+      />     
+      <Button
+        handleClick={decreaseByOne}
+        text='minus'
+      />           
+    </div>
   )
 }
 
