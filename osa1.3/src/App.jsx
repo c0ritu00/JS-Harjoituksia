@@ -14,7 +14,7 @@ const App = () => {
       .then(initialNotes => {
         setNotes(initialNotes)
       })
-  }, [])
+  }, []) //[] parametri kertoo reactille että ajetaan vain kerran
 
   const toggleImportanceOf = id => {
     const note = notes.find(n => n.id === id)

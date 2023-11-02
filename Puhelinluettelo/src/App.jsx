@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import personService from './services/personService'
 import Person from './components/Person'
 import PersonForm from './components/PersonForm'
 import Filter from './components/Filter'
@@ -11,38 +11,79 @@ const App = () => {
   const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
-    console.log('effect')
-    axios
-      .get('http://localhost:3001/persons')
-      .then(response => {
-        console.log('promise fulfilled')
-        setPersons(response.data)
+    personService
+      .getAll()
+      .then(initialPersons => {
+        setPersons(initialPersons)
       })
+      .catch(error => {
+        console.error("Error fetching data: ", error)
+      });
   }, [])
- 
-  const addPerson = (event) => {
-    event.preventDefault()
 
-    //Check for empty name and if it exists
+  const deletePerson = (person) => {
+    if (confirm(`Delete ${person.name} ?`)) {
+      personService.remove(person.id)
+        .then(() => {
+          setPersons(persons.filter(p => p.id !== person.id)); //Uusi tilamuuttuja
+        })
+        .catch(error => {
+          console.error("Error deleting person: ", error);
+        });
+    }
+  };
+
+  const addPerson = (event) => {
+    event.preventDefault();
+  
+    // Check for empty name
     if (newName.trim() === '') {
       alert('Name cannot be empty');
       return;
+    }
+  
+    const existingPerson = persons.find((person) => person.name === newName);
+    if (existingPerson) {
+      const confirmReplace = confirm(
+        `${newName} is already added to the phonebook, replace the old number with a new one?`
+      );
+  
+      if (confirmReplace) {
+        optionalNumberChange(existingPerson.id, newNumber);
+      }
     } 
-    if (persons.some((person) => person.name === newName)) {
-      alert(`${newName} is already added to phonebook`) //Backticks for using variables inside a string
-      return;
+    else {
+      const personObject = {
+        name: newName,
+        number: newNumber,
+      };
+  
+      personService
+        .create(personObject)
+        .then(returnedPerson => {
+          setPersons(persons.concat(returnedPerson));
+          setNewName('');
+          setNewNumber('');
+        })
+        .catch(error => {
+          console.error("Error creating person: ", error);
+        });
     }
+  };
 
-    const personObject = {
-      name: newName,
-      number: newNumber,
-      id: persons.length + 1
-    }
-
-    setPersons(persons.concat(personObject))
-    setNewName('')
-    setNewNumber('')
-  }
+  const optionalNumberChange = (id, newNumber) => {
+    const person = persons.find(p => p.id === id)
+    const changedPerson = { ...person, number: newNumber }
+  
+    personService
+      .update(id, changedPerson)
+      .then(returnedPerson => {
+        setPersons(persons.map(person => person.id !== id ? person : returnedPerson))
+      })
+      .catch(error => {
+        console.log(error)
+      })
+  };
 
   const handleNameChange = (event) => {
     setNewName(event.target.value)
@@ -72,7 +113,7 @@ const App = () => {
       <h2>Numbers</h2>
       <div>
         {filteredPersons.map(person => 
-            <Person key={person.id} person={person} />
+            <Person key={person.id} person={person} deletePerson={() => deletePerson(person)} />
         )}
       </div>
     </div>
